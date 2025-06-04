@@ -8,8 +8,7 @@ This project demonstrates the implementation of a Retrieval Augmented Generation
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Output](#output)
 
 ## Introduction
 
@@ -43,12 +42,39 @@ To set up the project locally, follow these steps:
    npm install
    ```
 
+3. **Create Pinecone index**
+   Create pinecone index at https://app.pinecone.io/.
+   Choose text-embedding-3-small as we are using Open AI embeddings, we need an embedding model with 1536 dimension.
+   ![image](https://github.com/user-attachments/assets/e31e9ce0-3a36-4821-9c7d-f0a5415a1d13)
+
+
+5. **Set environemental variables**
+   Set Open AI API key and pinecone index name and key in .env file
+   ```bash
+      OPENAI_API_KEY=<OPENAI_API_KEY>
+      PINECONE_INDEX_NAME=<PINECONE_INDEX_NAME>
+      PINECONE_API_KEY=<PINECONE_API_KEY>
+   ```
+
 ## Usage
 
-After installation, you can start the application using:
+1. **Injest the docs**
+   ```bash
+      node injest.js
+   ```
+   Refresh your pinecone index, you should be able to see the embedded docs
+2. **Get results for the query**
+   ```bash
+      node retrieve.js
+   ```
 
-```bash
-npm start
-```
+## Output
+You should see two outputs for the query: "What is Attention?"
 
-This will initiate the RAG application, allowing you to input queries and receive generated responses based on the integrated data sources.
+
+**Result before RAG:**
+ Attention is the cognitive process of selectively concentrating on a particular stimulus or information while ignoring other stimuli. It involves focusing mental resources on a specific task or input, and is essential for various cognitive processes such as perception, memory, and decision-making. Attention can be voluntary or involuntary, and can vary in terms of intensity and duration. It is a crucial aspect of human cognition and plays a key role in our ability to effectively process and respond to the world around us.
+
+
+**Result after RAG:**
+ Attention is an integral part of sequence modeling and transduction models, allowing for modeling dependencies without regard to their distance in sequences. It is a mechanism that relates different positions of a sequence to compute a representation of the sequence. The Transformer model relies entirely on attention mechanisms to draw global dependencies between input and output sequences. Thanks for asking!
