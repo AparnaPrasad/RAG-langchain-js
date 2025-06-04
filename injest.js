@@ -49,7 +49,7 @@ async function uploadToPinecone(filePath) {
 (async () => {
   
     try {
-      await uploadToPinecone('./ReAct LLM.pdf');
+      await uploadToPinecone('./attention.pdf');
     } catch (error) {
       console.error('Error uploading data:', error);
     }

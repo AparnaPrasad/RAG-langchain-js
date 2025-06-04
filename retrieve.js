@@ -10,32 +10,27 @@ import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import * as hub from "langchain/hub";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents"
-import { createRetrievalChain } from "langchain/chains/retrieval";
+
 
 import dotenv from 'dotenv'
 dotenv.config()
 
-const formatDocs = (docs) => "\n\n".join(docs.map(docs.pageContent))
-
 // Query Pinecone with LangChain
-async function queryPinecone(indexName, query) {
+async function queryPinecone(query) {
     let result;
     const llm = new ChatOpenAI({
         modal: "gpt-4",
         temperature: 0,
     })
     
-    query = "What is React?"
-
     // Query without RAG by just passing query to llm
     const prompt = PromptTemplate.fromTemplate(query)
     const chain =  prompt.pipe(llm);
-   //result = await chain.invoke()
-   //console.log("result before RAG \n\n", result.content)
+   
+    result = await chain.invoke(query)
+    console.log("\nResult before RAG:\n", result.content)
 
-    // Query with RAG, llm has context of the pdf document
+    
     const embeddings = new OpenAIEmbeddings({
         openAIApiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
     });
@@ -43,26 +38,12 @@ async function queryPinecone(indexName, query) {
     const pinecone = new PineconeClient();
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
-   const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-        pineconeIndex,
-        // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
-        maxConcurrency: 5,
-    });
-
-
-    // Use retrieval-qa-chat  prompt from langchain hub
-    const retrievalQAprompt = await hub.pull("langchain-ai/retrieval-qa-chat");
-
-    if (!retrievalQAprompt) {
-        console.log("Error:")
-    }
-
-    console.log("retrievalQAprompt", retrievalQAprompt)
-    const combineDocs = await createStuffDocumentsChain(llm, retrievalQAprompt)
-    const retrivalChain = await createRetrievalChain(vectorStore.asRetriever(), combineDocs)
-    result = await retrivalChain.invoke({"input": query})
-    console.log("result after RAG (retrieval-qa-chat prompt):", result);
-
+    // initialize vector store
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+          pineconeIndex,
+          // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
+          maxConcurrency: 5,
+      });
 
     // Use custom prompt
     const template = `Use the following peices of context to answer the question at the end. 
@@ -86,14 +67,15 @@ async function queryPinecone(indexName, query) {
         new StringOutputParser(),
       ]);
 
-    //const res = await ragChain.invoke(query)
-    //console.log("Result after own RAG", res)
+    // Result after RAG
+    const res = await ragChain.invoke(query)
+    console.log("\n\nResult after RAG:\n", res)
 
 
 }
 // Main execution
 (async () => {
-    const userQuery = 'Explain the purpose of the documentation.';
+    const userQuery = 'What is attention?';
   
     try {
       await queryPinecone(userQuery);
